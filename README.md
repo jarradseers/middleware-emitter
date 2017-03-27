@@ -37,7 +37,7 @@ $ npm install middleware-emitter
   * Build up the req.ctx chain for internal chain state.
   * Listen to multiple events on the same chain.
   * Emit multiple events at once.
-  * Simple, fast, light-weight with no external dependencies.
+  * Simple, fast, light-weight.
   * Written in ES6+ for node.js 6+.
   * Test driven.
 
