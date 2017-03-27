@@ -18,7 +18,7 @@ Assuming you have broken up your middleware functions:
 const emitter = require('middleware-emitter');
 const app = require('./middleware/app');
 
-emitter.on('hello', app.load, app.hello, app.handleError);
+emitter.on('hello', app.load, app.hello, app.output, app.handleError);
 
 emitter.emit('hello');
 ```
@@ -87,6 +87,31 @@ emitter.emit('inject', { some: 'data' });
 
 // { some: 'data', hello: 'world' }
 ```
+
+If you add a function with the 4th parameter of 'err', you can gracefully handle errors:
+
+```js
+emitter.on('ohno', (req, res, next) => {
+  next(new Error('Oh no, something went wrong...'));
+}, (req, res, next, err) => {
+  console.error(err);
+  next();
+}, (req, res) => {
+  console.log('But we continued anyway.');
+});
+
+emitter.emit('ohno');
+
+// Error: Oh no, something went wrong... + stack
+// But we continued anyway.
+```
+
+  // we can still 'next()' here if we wanted to continue.
+  // you could do something cool here, say if you had a bunch of validators
+  // you could do:
+  //  req.ctx.errors = req.ctx.errors || {};
+  //  req.ctx.errors.push(err);
+  // for later use.
 
 Check out the [test folder](test) for more!
 
