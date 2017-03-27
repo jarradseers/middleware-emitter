@@ -1,0 +1,41 @@
+{
+  "name": "middleware-emitter",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "engineStrict": true,
+  "description": "EventEmitter with middleware.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jarradseers/middleware-emitter.git"
+  },
+  "keywords": [
+    "events",
+    "middleware",
+    "middleware",
+    "emitter",
+    "middleware",
+    "events",
+    "chain",
+    "chainable",
+    "events",
+    "es6"
+  ],
+  "author": "Jarrad Seers <jarrad@seers.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jarradseers/middleware-emitter/issues"
+  },
+  "homepage": "https://github.com/jarradseers/middleware-emitter#readme",
+  "dependencies": {
+    "object-merger": "^1.0.1"
+  }
+}
