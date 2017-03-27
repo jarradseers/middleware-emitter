@@ -53,8 +53,9 @@ let events = [ 't1', 't2', 't3', 't4', 't5' ];
 
 emitter.on(events, (req, res, next) => {
   assert.ok(events.includes(req.event.name)) || total ++;
+  assert.strictEqual(req.ctx.some, 'data') || total ++;
 });
 
-emitter.emit(events);
+emitter.emit(events, { some: 'data' });
 
 console.log(`All ${total} of ${total} tests have passed.`);
