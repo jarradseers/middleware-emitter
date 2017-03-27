@@ -18,9 +18,8 @@ Assuming you have broken up your middleware functions:
 const emitter = require('middleware-emitter');
 const app = require('./middleware/app');
 
-emitter.on('hello', app.load, app.hello, app.output, app.handleError);
-
-emitter.emit('hello');
+emitter.on('hello', app.load, app.hello, app.output, app.handleError)
+  .emit('hello');
 ```
 
 ## Installation
@@ -52,24 +51,30 @@ A simple standalone example:
 ```js
 const emitter = require('middleware-emitter');
 
-emitter.on('hello', (req, res, next) => {
+emitter.on('hello',
+
+(req, res, next) => {
   res.ctx.hello = 'world';
   next();
-}, (req, res) => {
-  console.log(res.ctx); // { hello: 'world' }
-});
+},
 
-emitter.emit('hello');
+(req, res) => {
+  console.log(res.ctx); // { hello: 'world' }
+})
+
+.emit('hello');
 ```
 
 Listen / emit multiple events:
 
 ```js
-emitter.on([ 'hello', 'other', 'test' ], (req, res, next) => {
-  console.log(req.event.name);
-});
+emitter.on([ 'hello', 'other', 'test' ],
 
-emitter.emit([ 'hello', 'other', 'test' ]);
+(req, res, next) => {
+  console.log(req.event.name);
+})
+
+.emit([ 'hello', 'other', 'test' ]);
 
 // hello
 // other
@@ -79,11 +84,15 @@ emitter.emit([ 'hello', 'other', 'test' ]);
 Inject data into the req (request) context:
 
 ```js
-emitter.on('inject', { hello: 'world' }, (req, res, next) => {
-  console.log(req.ctx);
-});
+emitter.on('inject',
 
-emitter.emit('inject', { some: 'data' });
+{ hello: 'world' },
+
+(req, res, next) => {
+  console.log(req.ctx);
+})
+
+.emit('inject', { some: 'data' });
 
 // { some: 'data', hello: 'world' }
 ```
@@ -93,25 +102,26 @@ If you add a function with the 4th parameter of 'err', you can gracefully handle
 ```js
 emitter.on('ohno', (req, res, next) => {
   next(new Error('Oh no, something went wrong...'));
-}, (req, res, next, err) => {
+},
+
+(req, res, next, err) => {
   console.error(err);
   next();
-}, (req, res) => {
-  console.log('But we continued anyway.');
-});
+},
 
-emitter.emit('ohno');
+(req, res) => {
+  console.log('But we continued anyway.');
+})
+
+.emit('ohno');
 
 // Error: Oh no, something went wrong... + stack
 // But we continued anyway.
 ```
 
-  // we can still 'next()' here if we wanted to continue.
-  // you could do something cool here, say if you had a bunch of validators
-  // you could do:
-  //  req.ctx.errors = req.ctx.errors || {};
-  //  req.ctx.errors.push(err);
-  // for later use.
+Error handling can be done at any point within the chain, it will automatically hoist the next error handler out for use if an error is passed into a 'next'.
+
+Multiple error handlers can be used, the next error handler in the chain will be used, if there is no next handler, the previous one will be used. If none are found, the error is thrown.
 
 Check out the [test folder](test) for more!
 
