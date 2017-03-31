@@ -1,6 +1,6 @@
 {
   "name": "middleware-emitter",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "engines": {
     "node": ">=6.0.0"
   },
@@ -11,7 +11,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node test"
+    "test": "eslint . && node test"
   },
   "repository": {
     "type": "git",
@@ -37,5 +37,8 @@
   "homepage": "https://github.com/jarradseers/middleware-emitter#readme",
   "dependencies": {
     "object-merger": "^1.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.18.0"
   }
 }

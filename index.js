@@ -5,7 +5,6 @@
  * @created 27/03/2017 NZDT
  */
 
-'use strict';
 
 /**
  * Module exports.

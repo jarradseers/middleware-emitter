@@ -5,7 +5,6 @@
  * @created 27/03/2017 NZDT
  */
 
-'use strict';
 
 /**
  * Module dependencies.
@@ -22,10 +21,10 @@ const emitter = new MiddlewareEmitter({});
 
 let total = 0;
 
-let expectedRes1 = { ctx: { one: true, two: true } };
+const expectedRes1 = { ctx: { one: true, two: true } };
 let expectedReq1 = { ctx: { hello: 'world', three: true }, event: { name: 'test' } };
 
-emitter.on([ 'test', 'hello' ],
+emitter.on(['test', 'hello'],
 
 (req, res, next) => {
   res.ctx.one = true;
@@ -34,7 +33,7 @@ emitter.on([ 'test', 'hello' ],
 
 (req, res, next) => {
   res.ctx.two = true;
-  next()
+  next();
 },
 
 {
@@ -46,45 +45,45 @@ emitter.on([ 'test', 'hello' ],
 },
 
 (req, res, next, err) => {
-  assert.strictEqual(err.message, 'Custom Error.') || total ++;
+  assert.strictEqual(err.message, 'Custom Error.') || total++;
   next();
 },
 
 (req, res) => {
-  assert.deepEqual(req, expectedReq1) || total ++;
-  assert.deepEqual(res, expectedRes1) || total ++;
-})
+  assert.deepEqual(req, expectedReq1) || total++;
+  assert.deepEqual(res, expectedRes1) || total++;
+}).
 
-.emit([ 'test' ], { hello: 'world' });
+emit(['test'], { hello: 'world' });
 
 expectedReq1 = { event: { name: 'hello' }, ctx: { three: true } };
 
 emitter.emit('hello');
 
-let events = [ 't1', 't2', 't3', 't4', 't5' ];
+const events = ['t1', 't2', 't3', 't4', 't5'];
 
 emitter.on(events,
 
-(req, res, next) => {
-  assert.ok(events.includes(req.event.name)) || total ++;
-  assert.strictEqual(req.ctx.some, 'data') || total ++;
-})
+(req) => {
+  assert.ok(events.includes(req.event.name)) || total++;
+  assert.strictEqual(req.ctx.some, 'data') || total++;
+}).
 
-.emit(events, { some: 'data' });
+emit(events, { some: 'data' });
 
 emitter.on('errors', (req, res, next) => {
   next(new Error('Custom error 1'));
 }, (req, res, next, err) => {
-  assert.strictEqual(err.message, 'Custom error 1') || total ++;
+  assert.strictEqual(err.message, 'Custom error 1') || total++;
   next();
 }, (req, res, next) => {
   next(new Error('Custom error 2'));
 }, (req, res, next, err) => {
-  assert.strictEqual(err.message, 'Custom error 2') || total ++;
+  assert.strictEqual(err.message, 'Custom error 2') || total++;
 }).emit('errors');
 
 emitter.on('more-errors', (req, res, next, err) => {
-  assert.strictEqual(err.message, 'Custom error') || total ++;
+  assert.strictEqual(err.message, 'Custom error') || total++;
 }, (req, res, next) => {
   next(new Error('Custom error'));
 }).emit('more-errors');
