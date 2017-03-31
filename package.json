@@ -11,7 +11,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "eslint . && node test"
+    "test": "eslint . --fix && node test"
   },
   "repository": {
     "type": "git",
