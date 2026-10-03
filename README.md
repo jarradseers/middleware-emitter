@@ -1,26 +1,11 @@
 # Middleware Emitter
 
-  Use middleware to chain your event logic, compatible with express middleware (and possibly others).  This allows you to not only break up logic for when an event is fired, but let's you share middleware between frameworks if necessary.
+[![CI](https://github.com/jarradseers/middleware-emitter/actions/workflows/ci.yml/badge.svg)](https://github.com/jarradseers/middleware-emitter/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/middleware-emitter.svg)](https://www.npmjs.com/package/middleware-emitter)
 
-  The middleware-emitter project also brings multiple event triggering and capturing.
+An `EventEmitter` whose listeners are middleware chains. Break the logic for an event into small `(req, res, next)` functions, the same shape as express middleware, and share them between events.
 
-  _req_ The req is the 'request', the `req.ctx` is the context on the request, it's used to build up the state throughout the middleware.
-
-  _res_ The res is the 'response', the `res.ctx` is the context on the response, it's used to build up the output to be used later on.
-
-  You can think of the two like this - req = internal (chain only, imagine storing all data for calculation), res = external, when you are at the end of the chain - it's this object that you will want to use for display.
-
-## Usage
-
-Assuming you have broken up your middleware functions:
-
-```js
-const emitter = require('middleware-emitter');
-const app = require('./middleware/app');
-
-emitter.on('hello', app.load, app.hello, app.output, app.handleError)
-  .emit('hello');
-```
+It also lets you listen to, and emit, several events at once.
 
 ## Installation
 
@@ -28,111 +13,119 @@ emitter.on('hello', app.load, app.hello, app.output, app.handleError)
 $ npm install middleware-emitter
 ```
 
-## Features
-
-  * Create an event middleware chain.
-  * Inject middleware functions or objects.
-  * Build up the res.ctx chain for output.
-  * Build up the req.ctx chain for internal chain state.
-  * Listen to multiple events on the same chain.
-  * Emit multiple events at once.
-  * Simple, fast, light-weight.
-  * Written in ES6+ for node.js 6+.
-  * Test driven.
-
-## Options
-
-  MiddlewareEmitter extends the base EventEmitter class, therefore all standard options apply.
-
-## Examples
-
-A simple standalone example:
+## Usage
 
 ```js
-const emitter = require('middleware-emitter');
+const MiddlewareEmitter = require('middleware-emitter');
+
+const emitter = new MiddlewareEmitter();
 
 emitter.on('hello',
 
-(req, res, next) => {
-  res.ctx.hello = 'world';
-  next();
-},
+  (req, res, next) => {
+    res.ctx.hello = 'world';
+    next();
+  },
 
-(req, res) => {
-  console.log(res.ctx); // { hello: 'world' }
-})
+  (req, res) => {
+    console.log(res.ctx); // { hello: 'world' }
+  })
 
-.emit('hello');
+  .emit('hello');
 ```
 
-Listen / emit multiple events:
+Each emit runs the chain from the start with a fresh `req` and `res`:
+
+- `req.ctx` is the request context: the data passed to `emit`, plus any objects in the chain. Use it for state the chain needs internally.
+- `res.ctx` is the response context: build up the output here.
+- `req.event.name` is the name of the event that fired.
+- `next()` moves on to the next middleware. A middleware that does not call it ends the chain.
+
+Inside a middleware declared with `function`, `this` is the emitter.
+
+## API
+
+`MiddlewareEmitter` extends Node's [EventEmitter](https://nodejs.org/api/events.html), and its constructor takes the same options.
+
+| Method | Description |
+|---|---|
+| `on(events, ...chain)` | Run the chain every time an event fires. `events` is a name or an array of names. |
+| `once(events, ...chain)` | The same, for the first time each event fires only. |
+| `emit(events, data)` | Fire a name or an array of names. `data` is an object, merged into `req.ctx`. |
+
+All three return the emitter, so calls can be chained. Note that `emit` therefore does not return a boolean as it does on `EventEmitter`.
+
+A chain can hold middleware functions, error handlers, plain objects, and arrays of any of those.
+
+The other `EventEmitter` methods are untouched. `removeAllListeners` and `listenerCount` work as usual; `off` and `removeListener` cannot remove a chain, because the chain is wrapped in a single listener.
+
+## Examples
+
+Listen to and emit several events:
 
 ```js
-emitter.on([ 'hello', 'other', 'test' ],
+emitter.on(['hello', 'other', 'test'],
 
-(req, res, next) => {
-  console.log(req.event.name);
-})
+  (req) => {
+    console.log(req.event.name);
+  })
 
-.emit([ 'hello', 'other', 'test' ]);
+  .emit(['hello', 'other', 'test']);
 
 // hello
 // other
 // test
 ```
 
-Inject data into the req (request) context:
+Inject data into the request context:
 
 ```js
 emitter.on('inject',
 
-{ hello: 'world' },
+  { hello: 'world' },
 
-(req, res, next) => {
-  console.log(req.ctx);
-})
+  (req) => {
+    console.log(req.ctx);
+  })
 
-.emit('inject', { some: 'data' });
+  .emit('inject', { some: 'data' });
 
 // { some: 'data', hello: 'world' }
 ```
 
-If you add a function with the 4th parameter of 'err', you can gracefully handle errors:
+Handle errors with a function that takes a fourth `err` parameter:
 
 ```js
-emitter.on('ohno', (req, res, next) => {
-  next(new Error('Oh no, something went wrong...'));
-},
+emitter.on('ohno',
 
-(req, res, next, err) => {
-  console.error(err);
-  next();
-},
+  (req, res, next) => {
+    next(new Error('Oh no, something went wrong...'));
+  },
 
-(req, res) => {
-  console.log('But we continued anyway.');
-})
+  (req, res, next, err) => {
+    console.error(err.message);
+    next();
+  },
 
-.emit('ohno');
+  () => {
+    console.log('But we continued anyway.');
+  })
 
-// Error: Oh no, something went wrong... + stack
+  .emit('ohno');
+
+// Oh no, something went wrong...
 // But we continued anyway.
 ```
 
-Error handling can be done at any point within the chain, it will automatically hoist the next error handler out for use if an error is passed into a 'next'.
-
-Multiple error handlers can be used, the next error handler in the chain will be used, if there is no next handler, the previous one will be used. If none are found, the error is thrown.
-
-Check out the [test folder](test) for more!
+When an error is passed to `next`, the next error handler in the chain is called. If there is none later in the chain, the most recently found one is used, and if the chain has no error handler the error is thrown. Error handlers are skipped when there is no error.
 
 ## Tests
 
-  From the package 
-
-  ```bash
-  $ npm test
-  ```
+```bash
+$ npm install
+$ npm test
+```
 
 ## License
 
-  [MIT](LICENSE)
+[MIT](LICENSE)
